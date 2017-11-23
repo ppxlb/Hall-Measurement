@@ -1,50 +1,53 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov 20 10:47:18 2017
+Created on Thu Nov 23 12:11:23 2017
 
 @author: ppxlb
 """
 import numpy as np
-import visa
+from visa import ResourceManager
 
-def curr_main():
+def curr_main(): #function to ask the user for the desired current
     I = "I" + input('current: ')
     return I
 
+def rpts(): #function to ask the user for the desired number of repetitions to average over
+    R = input('No. of repeats? ')
+    return R
 
-def rpts():
-    R = int(round(float(input('No. of repeats? '))))
-    return (R)
-    
-    
-
-
-
-def read_av (I):
+def read_av (I): #func to READ and calculate resistances between each probe permutation
+    #setup, current and voltage respective ADDResses on instrument
     addr = np.array(["GPIB0::3::7::INSTR","GPIB0::3::8::INSTR","GPIB0::3::9::INSTR"])
-    cont = np.array([12,23,34,41,13,24])
-    rm = visa.ResourceManager()
-    i = 0
-    arr_V = np.array([])
-    arr_I = np.array([])
-    while i < 6:
+    cont = np.array([12,23,34,41,13,24]) # CONTact probe permutations
+    rm = ResourceManager() #shorthand access pyvisa to handle instrument
+    i = 0 #create iteration count variable
+    arr_V = np.empty(6) #empty arrays of length 6 for collecting voltage
+    arr_I = np.empty(6) #same for current
+    arr_R = np.empty(6) #same for resistance
+    #arr_R[0-6] can be determined from cont variable
+    while i < 6: #loop to measure over each
+        #open the current address on instrument (all termination characters are \n)
         instr3_8 = rm.open_resource(addr[1], read_termination = "\n")
-        instr3_8.write('A')
+        instr3_8.write('A') #set current mode to AC (set "D" for DC but redundant)
+        #open the setup address on instrument
         instr3_7 = rm.open_resource(addr[0], read_termination = "\n")
-        instr3_7.write('SO')
-        curr = "I"+I
-        instr3_8.write(curr)
+        instr3_7.write('SO') #not sure what this does to the instrument but it's needed
+        curr = "I"+I #create and stringify current message using out current argument
+        instr3_8.write(curr) #send our desired current
+        #open the voltage address on instrument
         instr3_9 = rm.open_resource(addr[2], read_termination = "\n")
-        instr3_9.write('G0') #gain G = 0
-        instr3_9.write('H256') #gain H = 256
-        src = "S"+cont[i]
-        instr3_7.write(src)
-        meas = "M"+cont[i]
-        instr3_7.write(meas)
-        i += 1
-        arr_V += instr3_9.read()
-        arr_I += instr3_8.read()
-        return arr_V,arr_I
-    print (arr_I, arr_V)
-    arr_R = arr_V/arr_I
-    return arr_R
+        instr3_9.write('G0') #set gain G = 0
+        instr3_9.write('H256') #set gain H = 256
+        src = "S"+str(cont[i]) #make and stringify source contact probe setting
+        instr3_7.write(src) #set source contact probes
+        meas = "M"+str(cont[i]) #make and stringify measurement contact probe setting
+        instr3_7.write(meas) #set measurement contact probes
+        Vin = instr3_9.read() #read volatage in to some variable
+        Iin = instr3_8.read() #read current in to some variable
+        arr_V[i] = Vin #insert to our arrays
+        arr_I[i] = Iin
+        i += 1 #add to out iteration count
+    np.divide(arr_V,arr_I,arr_R) #R=V/I
+    return arr_R #spit out our resistance
+
+print(read_av(curr_main()))
