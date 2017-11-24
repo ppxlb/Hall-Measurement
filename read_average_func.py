@@ -53,7 +53,12 @@ def read_R (I,rp): #func to READ and calculate resistances between each probe pe
     np.divide(arr_V,arr_I,arr_R) #R=V/I
     return arr_R #spit out our resistance
 
-print(read_R(curr_main()))
+print(read_R(curr_main(),rpts()))
 
-def R_stats (arr_R):
-    np.average(arr_R, )
+#def R_stats (arr_R):
+    #individual contacts average
+    #total R average
+    #standard deviations for 6 contact averages
+    #standard deviation from total R
+    #np.average(arr_R...
+    #standard deviation
