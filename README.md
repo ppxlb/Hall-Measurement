@@ -7,6 +7,8 @@ Requires NumPy and PyVISA modules to run arrays and GPIB communication respectiv
 
 Will only run whilst connected to the bio-rad HL5200 system with a GPIB.
 
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Python 3.6
+~*~*~*~*~*~*~*~*~
+Luke Barton
