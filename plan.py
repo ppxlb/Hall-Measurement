@@ -51,4 +51,12 @@ a = set_up()
 
 initialise(I,a)
 print(meas(N,cont_test,a))
-    
+
+#add in: resistance calculation, takes 1st array divides by second.
+#Averaging and SD func that works for any array so we can have <V>, <I>, <R_test>, Ra and Rb
+#set script so that we run the tests, do an average, print/check agreement
+#then measure V and I, calculate R and take average to give Ra
+#then measure V and I, calculate R and take average to give Rb
+#define of our f(x) and f'(x) van der pauw relations using Ra and Rb where x is sheet resistance
+#stick f(x) and f'(x) in scipy.optimise.newton(f(x),<Rab>, f'(x),args=(Ra,Rb),tol=0.0000000001,maxiter=5000)
+  
