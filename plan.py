@@ -7,6 +7,7 @@ Created on Wed Nov 29 16:27:14 2017
 
 import numpy as np
 from visa import ResourceManager
+from scipy import optimize as op
 
 cont_test = np.array([12,23,34,41,13,24])
 cont_Ra = np.array([[43,12],[34,21],[12,43],[21,34]])
@@ -16,6 +17,7 @@ cont_Rb = np.array([[23,41],[32,14],[41,23],[14,32]]) #Both of these require ADV
 #cont_Rb = np.array([[23,32,41,14],[41,41,32,32]])
 I = float(input("Current: "))
 N = int(round(float(input("Sampling Count: "))))
+t = float(input("thickness (um): "))
 
 def set_up():
     addr = ["GPIB0::3::7::INSTR","GPIB0::3::8::INSTR","GPIB0::3::9::INSTR"]
@@ -77,6 +79,36 @@ def meas_vdp(N, cont, instrs,G):
             arr_V[(x,y)] = instrs[2].read() #read voltage in, insert to our arrays
             arr_I[(x,y)] = instrs[1].read() #read current in
     return arr_V, arr_I
+
+#def avg (arr, N):
+#    av=np.empty(len(arr),dtype=float)
+#    sd=np.empty(len(arr),dtype=float)
+#    for i in range (0,len(arr)):
+#        av[i] = np.mean(arr[i])
+#        sd[i] = np.std(arr[i])
+#    return av, sd
+#    
+#def R (V, I, V_sd, I_sd):
+#    R = V/I
+#    SDi = V_sd/I_sd
+#    Rav = np.mean(R)
+#    SDf = np.std(R)
+#    return Rav,SDf,R,SDi
+#
+#def VdP (x, Ra, Rb):
+#    pi = -np.pi
+#    f = np.exp(pi*Ra/x)+np.exp(pi*Rb/x)-1
+#    return f
+#
+#def VdP_1 (x, Ra, Rb):
+#    pi = np.pi
+#    f = pi*(Ra*np.exp(-pi*Ra/x)+Rb*np.exp(-pi*Rb/x))/x**2
+#    return f
+
+
+#Rs = op.newton(VdP, ((Ra+Rb)/2),fprime = VdP_1, args = (Ra, Rb), tol=(10^-10), maxiter = 5000)
+
+
 
 a = set_up()
 
