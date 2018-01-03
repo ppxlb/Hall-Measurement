@@ -51,18 +51,20 @@ def meas(N, cont, instrs):
             arr_I[(x,y)] = instrs[2].read() #read current in to some variable
     return arr_V, arr_I
 
-def gain(Vt,instrs):
+def gain(Vt,instrs, G = 0, H = 255):
+    instrs[3].write("G"G) #set gain G
+    instrs[3].write("H"H) #set gain H
     instrs[1].write("S12") #set source contact probes
     instrs[1].write("M34") #set measurement contact probes
-    V = abs(Vt/(float(instrs[3].read())/(256/255))) #read volatage in to some variable, insert to our arrays
-    if V <= 10:
-        return 0, 255/V #V UNSURE THIS DOESN'T WORK {G=1, 255/V} works or {G=0, H = 25.5*V}
-    elif V> 10 and V < 100:
-        return 1, 2550/V
-    elif V >= 100 and V < 1000:
-        return 2, 25500/V
-    elif V >= 1000 and V < 255000:
-        return 3, 255000/V
+    u = abs(Vt/(float(instrs[3].read())/(256/H))) #ratio of target voltage Vt to measured voltage 
+    if u <= 10:
+        return 0, 255/u #u UNSURE THIS DOESN'T WORK {G=1, 255/u} works or {G=0, H = 25.5*u}
+    elif u> 10 and u < 100:
+        return 1, 2550/u
+    elif u >= 100 and u < 1000:
+        return 2, 25500/u
+    elif u >= 1000 and u < 255000:
+        return 3, 255000/u
     else:
         print ("error in gain determination")
 
@@ -82,54 +84,64 @@ def meas_vdp(N, cont, instrs,G):
             arr_I[(x,y)] = instrs[1].read() #read current in
     return arr_V, arr_I
 
-#def avg (arr, N):
-#    av=np.empty(len(arr),dtype=float)
-#    sd=np.empty(len(arr),dtype=float)
-#    for i in range (0,len(arr)):
-#        av[i] = np.mean(arr[i])
-#        sd[i] = np.std(arr[i])
-#    return av, sd
-#    
-#def R (V, I, V_sd, I_sd):
-#    R = V/I
-#    SDi = V_sd/I_sd
-#    Rav = np.mean(R)
-#    SDf = np.std(R)
-#    return Rav,SDf,R,SDi
-#
-#def VdP (x, Ra, Rb):
-#    pi = -np.pi
-#    f = np.exp(pi*Ra/x)+np.exp(pi*Rb/x)-1
-#    return f
-#
-#def VdP_1 (x, Ra, Rb):
-#    pi = np.pi
-#    f = pi*(Ra*np.exp(-pi*Ra/x)+Rb*np.exp(-pi*Rb/x))/x**2
-#    return f
+def avg (arr, N):
+    av=np.empty(len(arr),dtype=float)
+    sd=np.empty(len(arr),dtype=float)
+    for i in range (0,len(arr)):
+        av[i] = np.mean(arr[i])
+        sd[i] = np.std(arr[i])
+    return av, sd
+    
+def R (V, I, V_sd, I_sd):
+    R = V/I
+    SDi = V_sd/I_sd
+    Rav = np.mean(R)
+    SDf = np.std(R)
+    return Rav,SDf,R,SDi
 
+def VdP (x, Ra, Rb):
+    pi = -np.pi
+    f = np.exp(pi*Ra/x)+np.exp(pi*Rb/x)-1
+    return f
 
-#Rs = op.newton(VdP, ((Ra+Rb)/2),fprime = VdP_1, args = (Ra, Rb), tol=(10^-10), maxiter = 5000)
+def VdP_1 (x, Ra, Rb):
+    pi = np.pi
+    f = pi*(Ra*np.exp(-pi*Ra/x)+Rb*np.exp(-pi*Rb/x))/x**2
+    return f
 
+def mob (instr, meas(),avg(),R()):
+    cont_mob = np.array([[31,42],[13,24],[42,13],[24,31]])
+    instr[0].write("ONI")
+    VIn = meas(N, cont_mob, a)
+    Vn = avg(VIn[0])
+    In = avg(VIn[1])
+    Rn = R(Vn[0],In[0],Vn[1],In[1])
+    instr[0].write("OSI")
+    VIs = meas(N, cont_mob, a)
+    Vs = avg(VIs[0])
+    Is = avg(VIs[1])
+    Rs = R(Vs[0],Is[0],Vs[1],Is[1])
+    instr[0].write("O")
+    scc = (sum(Rn[2])-sum(Rs[2]))/8
+    return scc
 
 a = set_up()
 
 initialise(I,a)
-G = gain(float(2),a)
-print (meas_vdp(N,cont_Ra,a,G))
+G1 = gain(float(2),a)
+G2 = gain(float(2),a,G1[0],G1[1])
 
-#def mob (t,gain,meas,R,avg,instr,Rs):
-#    instr.write("ONI")
-#    gain()
-#    meas()
-#    avg()
-#    R()
-#    Rhs=
-#    Rh=
-#    n=
-#    return Rhs, Rh, n
+VIa = meas_vdp(N,cont_Ra,a,G2)
+Va = avg(VIa[0],N)
+Ia = avg(VIa[1],N)
+Ra = R(Va[0],Ia[0],Va[1],Ia[1])
 
+VIb = meas_vdp(N,cont_Rb,a,G2)
+Vb = avg(VIb[0],N)
+Ib = avg(VIb[1],N)
+Rb = R(Vb[0],Ia[0],Va[1],Ia[1])
 
-
+Rs = op.newton(VdP(), ((Ra+Rb)/2),fprime = VdP_1(), args = (Ra, Rb), tol=(10^-10), maxiter = 5000)
 
 #add in: resistance calculation, takes 1st array divides by second.
 #Averaging and SD func that works for any array so we can have <V>, <I>, <R_test>, Ra and Rb
@@ -139,3 +151,17 @@ print (meas_vdp(N,cont_Ra,a,G))
 #define of our f(x) and f'(x) van der pauw relations using Ra and Rb where x is sheet resistance
 #stick f(x) and f'(x) in scipy.optimise.newton(f(x),<Rab>, f'(x),args=(Ra,Rb),tol=0.0000000001,maxiter=5000)
   
+#def gain(Vt,instrs):
+#    instrs[1].write("S12") #set source contact probes
+#    instrs[1].write("M34") #set measurement contact probes
+#    V = abs(Vt/(float(instrs[3].read())/(256/255))) #read volatage in to some variable, insert to our arrays
+#    if V <= 10:
+#        return 0, 255/V #V UNSURE THIS DOESN'T WORK {G=1, 255/V} works or {G=0, H = 25.5*V}
+#    elif V> 10 and V < 100:
+#        return 1, 2550/V
+#    elif V >= 100 and V < 1000:
+#        return 2, 25500/V
+#    elif V >= 1000 and V < 255000:
+#        return 3, 255000/V
+#    else:
+#        print ("error in gain determination")
