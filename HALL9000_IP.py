@@ -25,10 +25,12 @@ import tkinter as tk
 #window.wm_iconbitmap("HALL9000.ico")
 #window.mainloop()
 
-cont_test = np.array([12,23,34,41,13,24])
+
 cont_Ra = np.array([[43,12],[34,21],[12,43],[21,34]])
 cont_Rb = np.array([[23,14],[32,41],[41,32],[14,23]]) #Both of these require ADVANCED indexing
 cont_Rm = np.array([[31,42],[13,24],[42,13],[24,31]])
+
+
 
 I = float(input("Current (uA): "))
 N = int(round(float(input("Sampling Count: "))))
@@ -294,21 +296,26 @@ a = set_up()
 initialise(I,a)
 G = gain(float(2),a)
 def chck(meas, avg, instrs):
-    tests = meas(N, cont_test, instrs)
+    dline = "--------------------------------------------------"
+    cont_test = np.array([12,23,34,41,13,24])
+    tests = meas(1, cont_test, instrs, (0,255))
     results = avg(tests[0],N)
-    for i in len(results):
-        Txt.insert(tk.END,(str(cont_test[i])+": "+str(results[0,i])+"V\n"))
+    x=0
+    Txt.insert(tk.END,dline+"\n"+"Contacts read:"+"\n")
+    for i in results[0]:
+        Txt.insert(tk.END,(str(cont_test[x])[0]+" to "+(str(cont_test[x])[1]+" = "+str(i)+" V\n")))
+        x=x+1
 
 window = tk.Tk()
 scrollbar = tk.Scrollbar(window)
 scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 Txt = tk.Text(window,wrap=tk.WORD,yscrollcommand=scrollbar.set,height = 45, width = 70)
 Txt.pack(side=tk.RIGHT)
-test_btn = tk.Button(window, text = "Check contacts", command = chck)
+test_btn = tk.Button(window, text = "Check contacts", command = lambda : chck(meas,avg,a) )
 test_btn.pack(side=tk.LEFT)
 window.title("HALL 9000")
 window.geometry("1200x800")
-#window.wm_iconbitmap("HALL9000.ico")
+window.wm_iconbitmap("HALL9000.ico")
 window.mainloop()
 
 
