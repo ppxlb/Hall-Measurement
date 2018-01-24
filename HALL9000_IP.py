@@ -24,18 +24,32 @@ import tkinter as tk
 #window.geometry("1200x800")
 #window.wm_iconbitmap("HALL9000.ico")
 #window.mainloop()
+"""----------GUI SETUP---------"""
+window = tk.Tk()
+I_ent = tk.Entry(window)
+I_ent.delete(0,tk.END)
+I_ent.insert(0,"100")
+I_ent.pack()
+scrollbar = tk.Scrollbar(window)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+Txt = tk.Text(window,wrap=tk.WORD,yscrollcommand=scrollbar.set,height = 45, width = 70)
+Txt.pack(side=tk.RIGHT)
 
+"""-------------------------contacts definitions--------------------------"""
 
 cont_Ra = np.array([[43,12],[34,21],[12,43],[21,34]])
 cont_Rb = np.array([[23,14],[32,41],[41,32],[14,23]]) #Both of these require ADVANCED indexing
 cont_Rm = np.array([[31,42],[13,24],[42,13],[24,31]])
 
+dline = "--------------------------------------------------"
 
-
-I = float(input("Current (uA): "))
+I = float(I_ent.get())
+#I = float(input("Current (uA): "))
 N = int(round(float(input("Sampling Count: "))))
 t = float(input("thickness (um): "))
 t_err = float(input("thickness error (um): "))
+
+"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
 def set_up():
     """
     ---------------------------------------------------------------------------
@@ -259,6 +273,8 @@ def VdP_1 (x, Ra, Rb):
     f = pi*(Ra*np.exp(-pi*Ra/x)+Rb*np.exp(-pi*Rb/x))/x**2
     return f
 
+"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
+
 #def meas_VH(N, cont, instrs, G):
 #    arr_V = np.empty([len(cont),N]) #empty arrays for collecting voltage
 #    arr_I = np.empty([len(cont),N]) #same for current
@@ -295,8 +311,11 @@ a = set_up()
 
 initialise(I,a)
 G = gain(float(2),a)
-def chck(meas, avg, instrs):
-    dline = "--------------------------------------------------"
+
+"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
+
+def chck(meas, avg, instrs,dline):
+#    dline = "--------------------------------------------------"
     cont_test = np.array([12,23,34,41,13,24])
     tests = meas(1, cont_test, instrs, (0,255))
     results = avg(tests[0],N)
@@ -306,21 +325,7 @@ def chck(meas, avg, instrs):
         Txt.insert(tk.END,(str(cont_test[x])[0]+" to "+(str(cont_test[x])[1]+" = "+str(i)+" V\n")))
         x=x+1
 
-window = tk.Tk()
-scrollbar = tk.Scrollbar(window)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-Txt = tk.Text(window,wrap=tk.WORD,yscrollcommand=scrollbar.set,height = 45, width = 70)
-Txt.pack(side=tk.RIGHT)
-test_btn = tk.Button(window, text = "Check contacts", command = lambda : chck(meas,avg,a) )
-test_btn.pack(side=tk.LEFT)
-window.title("HALL 9000")
-window.geometry("1200x800")
-window.wm_iconbitmap("HALL9000.ico")
-window.mainloop()
-
-
-
-def resistivity(instr, gain, meas, avg, R, N, Ga):
+def resistivity(instr, gain, meas, avg, R, N, Ga, dline):
     cont_Ra = np.array([[43,12],[34,21],[12,43],[21,34]])
     cont_Rb = np.array([[23,14],[32,41],[41,32],[14,23]])
     VIa = meas_vdp(N,cont_Ra,a,Ga)
@@ -336,23 +341,25 @@ def resistivity(instr, gain, meas, avg, R, N, Ga):
     x0 = (Ra[0]+Rb[0])/2
 
     if Ra[1] > Rb[1]:
-        Rs_err = (-(np.pi)*Ra[1]/(-0.69315))/np.sqrt(N)
+        Rs_err = (-(np.pi)*Ra[1]/(-0.69315))/(N**0.5)
     else:
-        Rs_err = (-(np.pi)*Rb[1]/(-0.69315))/np.sqrt(N)
+        Rs_err = (-(np.pi)*Rb[1]/(-0.69315))/(N**0.5)
 
-    Rs = op.newton(VdP, x0, fprime = VdP_1, args = (Ra[0], Rb[0]), maxiter = 5000)
+    Rs = float(op.newton(VdP, x0, fprime = VdP_1, args = (Ra[0], Rb[0]), maxiter = 5000))
+    Txt.insert(tk.END, dline+"\n"+"Sheet Resistivity: "+str("%e" % round(Rs,-1))+" "+chr(177)+" "+str("%.e" % Rs_err)+" "+"Ohm/sq"+"\n")
     Rho = Rs*t*0.0001
-    Rho_err = Rho*np.sqrt(((Rs_err/Rs)**2)+((t_err/t)**2))
-    print("Sheet Resistivity: ", "%e" % round(Rs,-1), chr(177),"%.e" % Rs_err, "Ohm/sq")
-    print("Resistivity: ", round(Rho,3),chr(177),"%.e" % Rho_err, "Ohm.cm")
+    Rho_err = float(Rho*np.sqrt(((Rs_err/Rs)**2)+((t_err/t)**2)))
+#    print("Sheet Resistivity: ", "%e" % round(Rs,-1), chr(177),"%.e" % Rs_err, "Ohm/sq")
+#    print("Resistivity: ", round(Rho,3),chr(177),"%.e" % Rho_err, "Ohm.cm")    
+    Txt.insert(tk.END, "Resistivity: "+str(round(Rho,3))+" "+chr(177)+" "+str(round(Rho_err,1))+" "+"Ohm.cm"+"\n")
     return Rs, Rho, Ra, Rb, Rs_err, Rho_err
 
-output2 = resistivity(a,gain,meas_vdp,avg,R,N,G)
+#output2 = resistivity(a,gain,meas_vdp,avg,R,N,G)
 #add in: resistance calculation, takes 1st array divides by second.
 #Averaging and SD func that works for any array so we can have <V>, <I>, <R_test>, Ra and Rb
 #set script so that we run the tests, do an average, print/check agreement
 
-def Hall (instr, gain, meas, avg, R, N, I, Ga, Vt = 2):
+def Hall (instr, gain, meas, avg, R, N, I, Ga, dline, Vt = 2):
     """
     ---------------------------------------------------------------------------
     This is the Hall measurement function and by far the most complex it 
@@ -418,7 +425,6 @@ def Hall (instr, gain, meas, avg, R, N, I, Ga, Vt = 2):
     instr[0].write("ONI")
     sleep(12)
     GH = gain(Vt, instr, Ga,  cont = (13,42))
-#    print ("Gain values used: ", GH)
     VIn = meas_vdp(N, cont_h, a, GH)
     Vn = avg((VIn[0]/((255/GH[1])*10**GH[0])),N)
     In = avg(VIn[1],N)
@@ -429,8 +435,9 @@ def Hall (instr, gain, meas, avg, R, N, I, Ga, Vt = 2):
     Is = avg(VIs[1],N)
     instr[0].write("ON")
     VH = (sum(Vn[0]-Vs[0]))/8
-    VH_err = (sum(Vn[1]+Vs[1]))/(8*np.sqrt(N))
-    print ("Overall Hall Voltage: ", "%g" % VH,chr(177),"%.g" % VH_err, "V")
+    VH_err = (sum(Vn[1]+Vs[1]))/(8*(N**0.5))
+#    print ("Overall Hall Voltage: ", "%g" % VH,chr(177),"%.g" % VH_err, "V")
+    Txt.insert(tk.END,dline+"\n"+"Overall Hall Voltage: "+str("%g" % VH)+" "+chr(177)+" "+str("%.g" % VH_err)+" "+"V"+"\n")
 #    if VH < 0:
 #        print ("Sample is N-type")
 #    elif VH > 0:
@@ -438,24 +445,43 @@ def Hall (instr, gain, meas, avg, R, N, I, Ga, Vt = 2):
     Rn = R(Vn[0],In[0],Vn[1],In[1])
     Rs = R(Vs[0],Is[0],Vs[1],Is[1])
     RH = (sum(Rn[2])-sum(Rs[2]))/8
-    RH_err = (sum(Rn[1]+Rs[1]))/(8*np.sqrt(N))
-    print ("Hall Resistance: ", round(RH,1), chr(177),"%.g" % RH_err, "Ohm")
+    RH_err = (Rn[1]+Rs[1])/(8*(N**0.5))
+#    print ("Hall Resistance: ", round(RH,1), chr(177),"%.g" % RH_err, "Ohm")
+    Txt.insert(tk.END,"Hall Resistance: "+str(round(RH,1))+" "+chr(177)+" "+str("%.g" % RH_err)+" "+"Ohm"+"\n")
     SCC = (0.288*10**-4)/((-1.602*10**-19)*RH)
     SCC_err = SCC*RH/RH_err
-    print ("Sheet Carrier Concentration: ", "%e" % SCC,chr(177),"%.g" % SCC_err, "cm^-2")
+#    print ("Sheet Carrier Concentration: ", "%e" % SCC,chr(177),"%.g" % SCC_err, "cm^-2")
+    Txt.insert(tk.END,"Sheet Carrier Concentration: "+str("%e" % SCC)+" "+chr(177)+" "+str("%.g" % SCC_err)+" "+"cm^-2"+"\n")
     CC = SCC/(t*0.0001)
     CC_err = CC*np.sqrt(((SCC_err/SCC)**2)+((t_err/t)**2))
-    print ("Carrier Concentration: ", "%e" % CC, chr(177),"%.g" % CC_err, "cm^-3")
+#    print ("Carrier Concentration: ", "%e" % CC, chr(177),"%.g" % CC_err, "cm^-3")
+    Txt.insert(tk.END,"Carrier Concentration: "+str("%e" % CC)+" "+chr(177)+" "+str("%.g" % CC_err)+" "+"cm^-3"+"\n")
     HSC = (1/(SCC*(1.602*10**-19)))
     HSC_err = HSC*SCC/SCC_err
-    print ("Hall Sheet Coefficient: ", "%e" % HSC,chr(177),"%.g" % HSC_err, "cm^-2/C")
+#    print ("Hall Sheet Coefficient: ", "%e" % HSC,chr(177),"%.g" % HSC_err, "cm^-2/C")
+    Txt.insert(tk.END,"Hall Sheet Coefficient: "+str("%e" % HSC)+" "+chr(177)+" "+str("%.g" % HSC_err)+" "+"cm^-2/C"+"\n")
     HC = HSC*t*0.0001
     HC_err = HC*np.sqrt(((HSC_err/HSC)**2)+((t_err/t)**2))
-    print ("Hall Coefficient: ", "%e" % HC,chr(177),"%.g" % HC_err, "cm^-3/C")
+#    print ("Hall Coefficient: ", "%e" % HC,chr(177),"%.g" % HC_err, "cm^-3/C")
+    Txt.insert(tk.END,"Hall Coefficient: "+str("%e" % HC)+" "+chr(177)+" "+str("%.g" % HC_err)+" "+"cm^-3/C"+"\n")
     return VH, RH, SCC, CC, HSC, HC, VH_err, RH_err, SCC_err,CC_err, HSC_err,HC_err
 
-h = Hall(a, gain, meas_vdp, avg, R, N, I, G)
-Rs = output2[0]
-mob = 1/((h[2]*Rs)*(1.602*10**-19))
+"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
+
+#h = Hall(a, gain, meas_vdp, avg, R, N, I, G)
+#Rs = output2[0]
+#mob = 1/((h[2]*Rs)*(1.602*10**-19))
 #mob_err = mob*(np.sqrt(((Rs_err/Rs)**2)+(RH_err/h[2])))
-print ("Hall Mobility: ", "%e" % mob, chr(177), "cm^2/Vs") #"%.g" % mob_err,
+#print ("Hall Mobility: ", "%e" % mob, chr(177), "cm^2/Vs") #"%.g" % mob_err,
+    
+
+chck_btn = tk.Button(window, text = "Check contacts", command = lambda : chck(meas,avg,a,dline) )
+chck_btn.pack(side=tk.LEFT)
+shres_btn = tk.Button(window, text = "Resistivity Measurement", command = lambda : resistivity(a, gain, meas_vdp, avg, R, N, G, dline) )
+shres_btn.pack(side=tk.LEFT)
+shres_btn = tk.Button(window, text = "Hall Measurement", command = lambda : Hall(a, gain, meas_vdp, avg, R, N, I, G, dline) )
+shres_btn.pack(side=tk.LEFT)
+window.title("HALL 9000")
+window.geometry("1200x800")
+window.wm_iconbitmap("HALL9000.ico")
+window.mainloop()
