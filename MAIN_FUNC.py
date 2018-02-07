@@ -60,7 +60,10 @@ dline = "--------------------------------------------------"
 #N = int(round(float(input("Sampling Count: "))))
 #t = float(input("thickness (um): "))
 #t_err = float(input("thickness error (um): "))
-
+I = float(ent(0).get)
+N = int(round(float(ent(1).get)))
+t = float(ent(2).get)
+t_err = float(ent(3).get)
 """~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
 
 
