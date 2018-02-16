@@ -8,13 +8,17 @@ Created on Wed Nov 29 16:27:14 2017
 import numpy as np
 import tkinter as tk
 from SETUP import set_up
-from INSTRS import initialise
+from INITIAL import initialise
 from GAIN import gain
 from MEAS import meas, meas_vdp
 from PROCESS import avg, R
 from CHCK import chck
 from RESIST import resistivity
 from HALL import Hall
+
+a = set_up()
+initialise(a,100)
+#G = gain(float(2),a)
 
 ### GUI set up ###
 #window = tk.Tk()
@@ -30,22 +34,29 @@ from HALL import Hall
 #window.mainloop()
 """----------GUI SETUP---------"""
 window = tk.Tk()
+I_ent = tk.Entry(window)
+I_ent.delete(0,tk.END)
+I_ent.insert(0,"100")
+I_ent.pack()
+N_ent = tk.Entry(window)
+N_ent.delete(0,tk.END)
+N_ent.insert(0,"3")
+N_ent.pack()
+t_ent = tk.Entry(window)
+t_ent.delete(0,tk.END)
+t_ent.insert(0,"5")
+t_ent.pack()
+ter_ent = tk.Entry(window)
+ter_ent.delete(0,tk.END)
+ter_ent.insert(0,"0.5")
+ter_ent.pack()
 
-ent = []
-dft = ["100","3","5","0.5"]
-for i in range(0,4):
-    ent.append(tk.Entry(window))
-    ent(i).delete(0,tk.END)
-    ent(i).insert(0,dft(i))
-    ent(i).pack()
-#I_ent = tk.Entry(window)
-#I_ent.delete(0,tk.END)
-#I_ent.insert(0,"100")
-#I_ent.pack()
 scrollbar = tk.Scrollbar(window)
 scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 Txt = tk.Text(window,wrap=tk.WORD,yscrollcommand=scrollbar.set,height = 45, width = 70)
 Txt.pack(side=tk.RIGHT)
+
+
 
 """-------------------------contacts definitions--------------------------"""
 
@@ -60,10 +71,7 @@ dline = "--------------------------------------------------"
 #N = int(round(float(input("Sampling Count: "))))
 #t = float(input("thickness (um): "))
 #t_err = float(input("thickness error (um): "))
-I = float(ent(0).get)
-N = int(round(float(ent(1).get)))
-t = float(ent(2).get)
-t_err = float(ent(3).get)
+
 """~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
 
 
@@ -100,11 +108,13 @@ t_err = float(ent(3).get)
 #        return 3, 255000/u
 #    else:
 #        print ("error in gain determination")
+#
+#
+#I = float(I_ent.get)
+#N = int(round(float(N_ent.get)))
+#t = float(t_ent.get)
+#t_err = float(ter_ent.get)
 
-a = set_up()
-
-initialise(I,a)
-G = gain(float(2),a)
 
 """~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
 
@@ -123,12 +133,11 @@ G = gain(float(2),a)
 #mob_err = mob*(np.sqrt(((Rs_err/Rs)**2)+(RH_err/h[2])))
 #print ("Hall Mobility: ", "%e" % mob, chr(177), "cm^2/Vs") #"%.g" % mob_err,
     
-
-chck_btn = tk.Button(window, text = "Check contacts", command = lambda : chck(meas, avg, a, dline, N, Txt, tk) )
+chck_btn = tk.Button(window, text = "Check contacts", command = lambda : chck(meas, avg, a, gain, dline, N_ent.get, Txt, tk, I_ent.get) )
 chck_btn.pack(side=tk.LEFT)
-shres_btn = tk.Button(window, text = "Resistivity Measurement", command = lambda : resistivity(a, meas_vdp, avg, R, N, G, dline, t, t_err, Txt, tk))
+shres_btn = tk.Button(window, text = "Resistivity Measurement", command = lambda : resistivity(a, meas_vdp, avg, gain, R, N_ent.get, dline, t_ent.get, ter_ent.get, Txt, tk,I_ent.get))
 shres_btn.pack(side=tk.LEFT)
-mob_btn = tk.Button(window, text = "Hall Measurement", command = lambda : Hall(a, gain, meas_vdp, avg, R, N, I, G, dline, t, t_err, Txt, tk) )
+mob_btn = tk.Button(window, text = "Hall Measurement", command = lambda : Hall(a, gain, meas_vdp, avg, R, N_ent.get, dline, t_ent.get, ter_ent.get, Txt, tk, I_ent.get) )
 mob_btn.pack(side=tk.LEFT)
 window.title("HALL 9000")
 window.geometry("1200x800")

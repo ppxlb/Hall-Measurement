@@ -38,7 +38,7 @@ def meas(N, cont, instrs, G):
             arr_I[(x,y)] = instrs[2].read() #read current in to some variable
     return arr_V, arr_I
 
-def meas_vdp(N, cont, instrs,G):
+def meas_vdp(N, cont, instrs, G):
     """
     ---------------------------------------------------------------------------
     

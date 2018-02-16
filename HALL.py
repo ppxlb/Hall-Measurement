@@ -8,7 +8,7 @@ import numpy as np
 from time import sleep
 
 
-def Hall (instr, gain, meas, avg, R, N, I, Ga, dline, t, t_err, Txt, tk, Vt = 2):
+def Hall (instr, gain, meas, avg, R, N, Ga, dline, t, t_err, Txt, tk, I = 100, Vt = 2):
     """
     ---------------------------------------------------------------------------
     This is the Hall measurement function and by far the most complex it 
@@ -71,15 +71,17 @@ def Hall (instr, gain, meas, avg, R, N, I, Ga, dline, t, t_err, Txt, tk, Vt = 2)
     ---------------------------------------------------------------------------
     """
     cont_h = np.array([[31,42],[13,24],[42,13],[24,31]])
+    instr[2].write("I"+str(I)) #send our desired current
+    G = gain(Vt, instr)
+    GH = gain(Vt, instr, G, cont = (13,42))
     instr[0].write("ONI")
     sleep(12)
-    GH = gain(Vt, instr, Ga,  cont = (13,42))
-    VIn = meas(N, cont_h, instr, GH)
+    VIn = meas(N, cont_h, instr, GH, I)
     Vn = avg((VIn[0]/((255/GH[1])*10**GH[0])),N)
     In = avg(VIn[1],N)
     instr[0].write("OSI")
     sleep(16)
-    VIs = meas(N, cont_h, instr, GH)
+    VIs = meas(N, cont_h, instr, GH, I)
     Vs = avg((VIs[0]/((255/GH[1])*10**GH[0])),N)
     Is = avg(VIs[1],N)
     instr[0].write("ON")

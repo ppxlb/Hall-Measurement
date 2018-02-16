@@ -44,16 +44,18 @@ def VdP_1 (x, Ra, Rb):
     f = pi*(Ra*np.exp(-pi*Ra/x)+Rb*np.exp(-pi*Rb/x))/x**2
     return f
 
-def resistivity(instr, meas, avg, R, N, Ga, dline, t, t_err, Txt, tk):
+def resistivity(instr, meas, avg, gain, R, N, dline, t, t_err, Txt, tk, I = 100):
     cont_Ra = np.array([[43,12],[34,21],[12,43],[21,34]])
     cont_Rb = np.array([[23,14],[32,41],[41,32],[14,23]])
-    VIa = meas(N,cont_Ra,instr,Ga)
-    Va = avg((VIa[0]/((255/Ga[1])*10**Ga[0])),N)
+    instr[2].write("I"+str(I)) #send our desired current
+    G = gain(float(2),instr)
+    VIa = meas(N,cont_Ra,instr,G)
+    Va = avg((VIa[0]/((255/G[1])*10**G[0])),N)
     Ia = avg(VIa[1],N)
     Ra = R(Va[0],Ia[0],Va[1],Ia[1])
 
-    VIb = meas(N,cont_Rb,instr,Ga)
-    Vb = avg((VIb[0]/((255/Ga[1])*10**Ga[0])),N)
+    VIb = meas(N,cont_Rb,instr,I)
+    Vb = avg((VIb[0]/((255/G[1])*10**G[0])),N)
     Ib = avg(VIb[1],N)
     Rb = R(Vb[0],Ia[0],Va[1],Ia[1])
 
