@@ -8,7 +8,7 @@ import numpy as np
 from time import sleep
 
 
-def Hall (instr, gain, meas, avg, R, N, I, Ga, dline, Vt = 2):
+def Hall (instr, gain, meas, avg, R, N, dline, t, t_err, Txt, tk, I = 100, Vt = 2):
     """
     ---------------------------------------------------------------------------
     This is the Hall measurement function and by far the most complex it 
@@ -71,26 +71,24 @@ def Hall (instr, gain, meas, avg, R, N, I, Ga, dline, Vt = 2):
     ---------------------------------------------------------------------------
     """
     cont_h = np.array([[31,42],[13,24],[42,13],[24,31]])
+    instr[2].write("I"+str(I)) #send our desired current
+    G = gain(Vt, instr)
+    GH = gain(Vt, instr, G, cont = (13,42))
     instr[0].write("ONI")
     sleep(12)
-    GH = gain(Vt, instr, Ga,  cont = (13,42))
-    VIn = meas_vdp(N, cont_h, a, GH)
-    Vn = avg((VIn[0]/((255/GH[1])*10**GH[0])),N)
-    In = avg(VIn[1],N)
+    VIn = meas(N, cont_h, instr, GH)
+    Vn = avg((VIn[0]/((255/GH[1])*10**GH[0])))
+    In = avg(VIn[1])
     instr[0].write("OSI")
-    sleep(12)
-    VIs = meas_vdp(N, cont_h, a, GH)
-    Vs = avg((VIs[0]/((255/GH[1])*10**GH[0])),N)
-    Is = avg(VIs[1],N)
+    sleep(16)
+    VIs = meas(N, cont_h, instr, GH)
+    Vs = avg((VIs[0]/((255/GH[1])*10**GH[0])))
+    Is = avg(VIs[1])
     instr[0].write("ON")
     VH = (sum(Vn[0]-Vs[0]))/8
     VH_err = (sum(Vn[1]+Vs[1]))/(8*(N**0.5))
 #    print ("Overall Hall Voltage: ", "%g" % VH,chr(177),"%.g" % VH_err, "V")
     Txt.insert(tk.END,dline+"\n"+"Overall Hall Voltage: "+str("%g" % VH)+" "+chr(177)+" "+str("%.g" % VH_err)+" "+"V"+"\n")
-#    if VH < 0:
-#        print ("Sample is N-type")
-#    elif VH > 0:
-#        print ("Sample is P-type")
     Rn = R(Vn[0],In[0],Vn[1],In[1])
     Rs = R(Vs[0],Is[0],Vs[1],Is[1])
     RH = (sum(Rn[2])-sum(Rs[2]))/8
@@ -113,4 +111,8 @@ def Hall (instr, gain, meas, avg, R, N, I, Ga, dline, Vt = 2):
     HC_err = HC*np.sqrt(((HSC_err/HSC)**2)+((t_err/t)**2))
 #    print ("Hall Coefficient: ", "%e" % HC,chr(177),"%.g" % HC_err, "cm^-3/C")
     Txt.insert(tk.END,"Hall Coefficient: "+str("%e" % HC)+" "+chr(177)+" "+str("%.g" % HC_err)+" "+"cm^-3/C"+"\n")
+    #Rs = output2[0]
+    #mob = 1/((h[2]*Rs)*(1.602*10**-19))
+    #mob_err = mob*(np.sqrt(((Rs_err/Rs)**2)+(RH_err/h[2])))
+    #print ("Hall Mobility: ", "%e" % mob, chr(177), "cm^2/Vs") #"%.g" % mob_err,
     return VH, RH, SCC, CC, HSC, HC, VH_err, RH_err, SCC_err,CC_err, HSC_err,HC_err

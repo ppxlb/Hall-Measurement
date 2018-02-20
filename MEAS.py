@@ -38,7 +38,7 @@ def meas(N, cont, instrs, G):
             arr_I[(x,y)] = instrs[2].read() #read current in to some variable
     return arr_V, arr_I
 
-def meas_vdp(N, cont, instrs,G):
+def meas_vdp(N, cont, instrs, G):
     """
     ---------------------------------------------------------------------------
     
@@ -59,9 +59,9 @@ def meas_vdp(N, cont, instrs,G):
     
     ---------------------------------------------------------------------------
     """
-    arr_V = np.empty([len(cont),N]) #empty arrays of length 6 for collecting voltage
-    arr_I = np.empty([len(cont),N]) #same for current
-    for x in range(0,len(cont)):
+    arr_V = np.empty([len(cont), N]) #empty arrays of length 6*N for collecting voltage
+    arr_I = np.empty([len(cont), N]) #same for current
+    for x in range(0, len(cont)):
         S = "S"+str(cont[x,0]) #make and stringify source contact probe setting
         M = "M"+str(cont[x,1]) #make and stringify measurement contact probe setting
         for y in range(0,N):
