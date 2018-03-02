@@ -7,8 +7,19 @@ Created on Mon Jan 29 15:45:31 2018
 import numpy as np
 from time import sleep
 
+def bulk(t,Txt,tk):
+    f = open('temp.txt','r')
+    SCC = float(f.readlines()[1].strip())
+    f.close()
+    HSC = (1/(SCC*(1.602*10**-19)))
+    CC = SCC/(t*0.0001)
+#    CC_err = CC*np.sqrt(((SCC_err/SCC)**2)+((t_err/t)**2))
+    Txt.insert(tk.END,"Carrier Concentration: "+str("%e" % CC)+" "+chr(177)+" "+'str("%.g" % CC_err)'+" "+"cm^-3"+"\n")
+    HC = HSC*t*0.0001
+#    HC_err = HC*np.sqrt(((HSC_err/HSC)**2)+((t_err/t)**2))
+    Txt.insert(tk.END,"Hall Coefficient: "+str("%e" % HC)+" "+chr(177)+" "+"str('%.g' % HC_err)"+" "+"cm^-3/C"+"\n")
 
-def Hall (instr, gain, meas, avg, R, N, Ga, dline, t, t_err, Txt, tk, I = 100, Vt = 2):
+def hall (instr, gain, meas, avg, R, N, dline, t, t_err, Txt, tk, I = 100, Vt = 2):
     """
     ---------------------------------------------------------------------------
     This is the Hall measurement function and by far the most complex it 
@@ -76,43 +87,42 @@ def Hall (instr, gain, meas, avg, R, N, Ga, dline, t, t_err, Txt, tk, I = 100, V
     GH = gain(Vt, instr, G, cont = (13,42))
     instr[0].write("ONI")
     sleep(12)
-    VIn = meas(N, cont_h, instr, GH, I)
-    Vn = avg((VIn[0]/((255/GH[1])*10**GH[0])),N)
-    In = avg(VIn[1],N)
+    VIn = meas(N, cont_h, instr, GH)
+    Vn = avg((VIn[0]/((255/GH[1])*10**GH[0])))
+    In = avg(VIn[1])
     instr[0].write("OSI")
     sleep(16)
-    VIs = meas(N, cont_h, instr, GH, I)
-    Vs = avg((VIs[0]/((255/GH[1])*10**GH[0])),N)
-    Is = avg(VIs[1],N)
+    VIs = meas(N, cont_h, instr, GH)
+    Vs = avg((VIs[0]/((255/GH[1])*10**GH[0])))
+    Is = avg(VIs[1])
     instr[0].write("ON")
     VH = (sum(Vn[0]-Vs[0]))/8
     VH_err = (sum(Vn[1]+Vs[1]))/(8*(N**0.5))
-#    print ("Overall Hall Voltage: ", "%g" % VH,chr(177),"%.g" % VH_err, "V")
     Txt.insert(tk.END,dline+"\n"+"Overall Hall Voltage: "+str("%g" % VH)+" "+chr(177)+" "+str("%.g" % VH_err)+" "+"V"+"\n")
-#    if VH < 0:
-#        print ("Sample is N-type")
-#    elif VH > 0:
-#        print ("Sample is P-type")
     Rn = R(Vn[0],In[0],Vn[1],In[1])
     Rs = R(Vs[0],Is[0],Vs[1],Is[1])
     RH = (sum(Rn[2])-sum(Rs[2]))/8
     RH_err = (Rn[1]+Rs[1])/(8*(N**0.5))
-#    print ("Hall Resistance: ", round(RH,1), chr(177),"%.g" % RH_err, "Ohm")
     Txt.insert(tk.END,"Hall Resistance: "+str(round(RH,1))+" "+chr(177)+" "+str("%.g" % RH_err)+" "+"Ohm"+"\n")
     SCC = (0.288*10**-4)/((-1.602*10**-19)*RH)
     SCC_err = SCC*RH/RH_err
-#    print ("Sheet Carrier Concentration: ", "%e" % SCC,chr(177),"%.g" % SCC_err, "cm^-2")
     Txt.insert(tk.END,"Sheet Carrier Concentration: "+str("%e" % SCC)+" "+chr(177)+" "+str("%.g" % SCC_err)+" "+"cm^-2"+"\n")
-    CC = SCC/(t*0.0001)
-    CC_err = CC*np.sqrt(((SCC_err/SCC)**2)+((t_err/t)**2))
-#    print ("Carrier Concentration: ", "%e" % CC, chr(177),"%.g" % CC_err, "cm^-3")
-    Txt.insert(tk.END,"Carrier Concentration: "+str("%e" % CC)+" "+chr(177)+" "+str("%.g" % CC_err)+" "+"cm^-3"+"\n")
     HSC = (1/(SCC*(1.602*10**-19)))
     HSC_err = HSC*SCC/SCC_err
-#    print ("Hall Sheet Coefficient: ", "%e" % HSC,chr(177),"%.g" % HSC_err, "cm^-2/C")
     Txt.insert(tk.END,"Hall Sheet Coefficient: "+str("%e" % HSC)+" "+chr(177)+" "+str("%.g" % HSC_err)+" "+"cm^-2/C"+"\n")
-    HC = HSC*t*0.0001
-    HC_err = HC*np.sqrt(((HSC_err/HSC)**2)+((t_err/t)**2))
-#    print ("Hall Coefficient: ", "%e" % HC,chr(177),"%.g" % HC_err, "cm^-3/C")
-    Txt.insert(tk.END,"Hall Coefficient: "+str("%e" % HC)+" "+chr(177)+" "+str("%.g" % HC_err)+" "+"cm^-3/C"+"\n")
-    return VH, RH, SCC, CC, HSC, HC, VH_err, RH_err, SCC_err,CC_err, HSC_err,HC_err
+    f = open('temp.txt','r')
+    Rs = float(f.readlines()[0].strip())
+    f.close()
+    f = open('temp.txt','a')
+    f.write("\n"+str(SCC))
+    f.close()
+    bulk(t,Txt,tk)
+    mob = 1/((SCC*Rs)*(1.602*10**-19))
+    Txt.insert(tk.END,"Hall Mobility: "+str(mob)+"cm^2/Vs"+"\n")
+    #mob_err = mob*(np.sqrt(((Rs_err/Rs)**2)+(RH_err/h[2])))
+    #print ("Hall Mobility: ", "%e" % mob, chr(177), "cm^2/Vs") #"%.g" % mob_err,
+#    return VH, RH, SCC, CC, HSC, HC, VH_err, RH_err, SCC_err,CC_err, HSC_err,HC_err
+    
+def rebulk(bulk,t,Txt,tk):
+    Txt.insert(tk.END,"Given new thickness:"+"\n")
+    bulk(t,Txt,tk)

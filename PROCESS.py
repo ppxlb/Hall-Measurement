@@ -7,7 +7,7 @@ Created on Mon Jan 29 15:41:38 2018
 
 import numpy as np
 
-def avg (arr, N):
+def avg (arr):
     """
     ---------------------------------------------------------------------------
     
