@@ -16,6 +16,7 @@ from RESIST import resist, ivity, reivity
 from HALL import hall, bulk, rebulk
 from MAGNET import mag
 from SAVE import save
+from SCAN import winscan, scan
 
 a = set_up()
 initialise(a,100)
@@ -65,6 +66,8 @@ filmenu.add_command(label="Exit", command=window.quit)
 edimenu = tk.Menu(menubar,tearoff=0)
 edimenu.add_command(label="Recalculate Resistivity", command = lambda : reivity(ivity,float(tk.Entry.get(t_ent)),Txt,tk))
 edimenu.add_command(label="Recalculate Mobility", command = lambda : rebulk(bulk,float(tk.Entry.get(t_ent)),Txt,tk))
+edimenu.add_command(label="Scan Current", command = lambda : winscan(a, gain, meas, scan,Txt,tk))
+#edimenu.add_command(label="Scan current", command = lambda : winscan(a,meas,gain,Txt,tk))
 menubar.add_cascade(label="File", menu=filmenu)
 menubar.add_cascade(label="Edit", menu=edimenu)
 
