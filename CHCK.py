@@ -7,8 +7,10 @@ Created on Mon Jan 29 15:44:14 2018
 
 import numpy as np
 
-def chck(meas, avg, instrs, dline, Txt, tk):
+def chck(meas, avg, gain, instrs, I, dline, Txt, tk):
     cont_test = np.array([12,23,34,41,13,24])
+    instrs[2].write("I"+str(I)) #send our desired current
+#    G = gain(2, instrs)
     tests = meas(1, cont_test, instrs, (0,255))
     results = avg(tests[0])
     x=0

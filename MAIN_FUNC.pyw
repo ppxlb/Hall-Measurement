@@ -82,7 +82,7 @@ dline = "--------------------------------------------------"
 
 """User Controls"""
     
-chck_btn = tk.Button(window, text = "Check contacts", command = lambda : chck(meas, avg, a, dline, Txt, tk))
+chck_btn = tk.Button(window, text = "Check contacts", command = lambda : chck(meas, avg, gain, a, float(tk.Entry.get(I_ent)), dline, Txt, tk))
 chck_btn.place(x=118,y=300,width = 140,height=45)
 shres_btn = tk.Button(window, text = "Resistivity Measurement", command = lambda : resist(a, meas_vdp, avg, gain, R, int(tk.Entry.get(N_ent)), dline, float(tk.Entry.get(t_ent)), float(tk.Entry.get(ter_ent)), Txt, tk,float(tk.Entry.get(I_ent))))
 shres_btn.place(x=118,y=375,width = 140,height=45)
