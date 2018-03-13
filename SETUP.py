@@ -18,9 +18,9 @@ def set_up():
     
     ---------------------------------------------------------------------------
     """
-    addr = ["GPIB0::3::0::INSTR","GPIB0::3::7::INSTR","GPIB0::3::8::INSTR","GPIB0::3::9::INSTR"]
-    rm = ResourceManager()
-    instrs = []
-    for x in range(0,4):
-        instrs.append(rm.open_resource(addr[x], read_termination = "\n"))
-    return instrs
+    addr = ["GPIB0::3::0::INSTR","GPIB0::3::7::INSTR","GPIB0::3::8::INSTR","GPIB0::3::9::INSTR"] #create list of address name strings
+    rm = ResourceManager() #open pyvisa class for control and assign to rm
+    instrs = [] #create empty list to store address instances
+    for x in range(0,4): #do 4 times
+        instrs.append(rm.open_resource(addr[x], read_termination = "\n")) #make each address a resource manager instance and assign the relevant read termination "\n"
+    return instrs #return our list of instances
